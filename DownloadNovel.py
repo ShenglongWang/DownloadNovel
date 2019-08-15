@@ -5,12 +5,15 @@ Created on Mon Aug  5 14:46:58 2019
 @author: shenglong wang
 @version:01.00.00
 """
+import sys
+import os
 import requests
 from urllib.parse import quote
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from lxml import html
 import xml
+from multiprocessing import Pool
 
 Headers = {"User-Agent":("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 "
                           "(KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36")
@@ -102,13 +105,12 @@ def get_searchResult(NovelString):
 
 
 #按照用户所下载的内容保存到相应txt文件中
-def save(novel_name,chapterDict):
-    with open(novel_name + '.txt','w',encoding = 'utf-8') as f:
-        for chapter,url in chapterDict:
-            print('正在下载%s\n' %  chapter)
-            f.write(chapter + '\n')
-            f.write(get_text(url) + '\n')
-    print("下载完成！！\n")
+def save(arg):
+    chapter_name,url = arg
+    with open(chapter_name + '.txt','w',encoding = 'utf-8') as f:
+        print('[%d]正在下载%s\n' %  os.getpid(),chapter_name, file=sys.stderr)
+        f.write(chapter_name + '\n')
+        f.write(get_text(url) + '\n')
 
 #获取用户所要下载的小说名
 def get_NovelName():
@@ -127,6 +129,15 @@ def display_tenChapterTitle(chapterList):
         tmplist = chapterList
     for title,link in tmplist:
         print(title + '\n')
+        
+def mergeTxt(novel_name,downlist):
+    with open(novel_name + '.txt','w',encoding = 'utf-8') as novelFile:
+        for chapter_name,url in downlist:
+            with open(chapter_name + '.txt','r',encoding = 'utf-8') as f:
+                for line in f.readlines():
+                    novelFile.write(line)
+            os.remove(chapter_name + '.txt')
+    
 def main():
     
     while(True):
@@ -169,7 +180,9 @@ def main():
         downlist = chapterList[0:index]
     else:
         downlist = chapterList[index:]
-    save(novel_name,downlist)
+    Pool().map(save,[(chapter_name,url) for chapter_name,url in downlist])
+    
+    mergeTxt(novel_name,downlist)
     
 if __name__ == '__main__':
     main()
