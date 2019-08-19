@@ -108,7 +108,7 @@ def get_searchResult(NovelString):
 def save(arg):
     chapter_name,url = arg
     with open(chapter_name + '.txt','w',encoding = 'utf-8') as f:
-        print('[%d]正在下载%s\n' %  os.getpid(),chapter_name, file=sys.stderr)
+        print('[%d]正在下载%s\n' %  (os.getpid(),chapter_name), file=sys.stderr)
         f.write(chapter_name + '\n')
         f.write(get_text(url) + '\n')
 
