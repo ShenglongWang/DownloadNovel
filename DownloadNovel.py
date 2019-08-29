@@ -117,8 +117,12 @@ def get_NovelName():
     name = ''
     while(True):
         name = input('请输入小说名称（全称）：\n')
-        if name != '':
+        if name == 'q':
+            exit(0)
+        elif name != '':
             break
+        else:
+            pass
     return name
 
 def display_tenChapterTitle(chapterList):
@@ -148,16 +152,23 @@ def main():
         searchReturnType = judgeSearchReturnType(search)
         
         if(NONE_HAVE == searchReturnType):
-            print("抱歉，搜索没有结果，请重新输入!\n")
+            print("抱歉，搜索没有结果，请重新输入!（注：输入 q 即退出程序）\n")
         elif(HAVE_MORE ==searchReturnType):
             novel_list = get_allNovelList(search)
             while(True):
                 index = 1
-                print('相似小说如下，请选择需下载的小说(输入序号即可)：\n')
+                print('相似小说如下，请选择需下载的小说(输入序号即可) q 为退出程序：\n')
                 for name,author,link in novel_list:
-                    print(str(index) + '.' + name + ' 作者：'+ author +'\n')
+                    print(str(index) + '.' + name + ' 作者：' + author + '\n')
                     index += 1
-                select = int(input('小说序号：\n'))
+                select = input('小说序号：\n')
+                if select == 'q':
+                    exit(0)
+                try:
+                    select = int(select)
+                except:
+                    print("请输入正确的小说序号。\n")
+                    continue
                 if select in range(1,len(novel_list)+1):
                     novel_name,author,novel_url = novel_list[select-1]
                     chapterList = get_chapterList(get_url(novel_url))
@@ -170,16 +181,25 @@ def main():
     print('搜索到小说《' + novel_name + '》，总共' + str(len(chapterList)) +'章\n')
     
     display_tenChapterTitle(chapterList)
-    
-    index = int(input('请输入需要下载的章节数(正数表示从第一章开始下载；\n负数表示从最新一章往前下载；)\n'))
-    
-    if(abs(index) > len(chapterList)):
-        print("输入章节数大于总章节，默认下载全部章节。\n")
-        index = len(chapterList)
-    if(index >= 0):
-        downlist = chapterList[0:index]
-    else:
-        downlist = chapterList[index:]
+
+    while(True):
+        index = input('请输入需要下载的章节数(正数表示从第一章开始下载；\n负数表示从最新一章往前下载；q 为退出程序)\n')
+
+        if index == 'q':
+            exit(0)
+        try:
+            index = int(index)
+        except:
+            print("请输入正确的章节数（注：输入 q 即退出程序）\n")
+            continue
+        if(abs(index) > len(chapterList)):
+            print("输入章节数大于总章节，默认下载全部章节。\n")
+            index = len(chapterList)
+        if(index >= 0):
+            downlist = chapterList[0:index]
+        else:
+            downlist = chapterList[index:]
+        break
     Pool().map(save,[(chapter_name,url) for chapter_name,url in downlist])
     
     mergeTxt(novel_name,downlist)
